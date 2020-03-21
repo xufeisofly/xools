@@ -15,20 +15,6 @@ type Noder interface {
 	Equal(Noder) bool
 }
 
-// // ListNode is a Noder with ListBundle's list index
-// type ListNode struct {
-// 	ListIndex int
-// 	Node      Noder
-// }
-
-// func (ln ListNode) Equal(ln2 Noder) bool {
-// 	return ln.Node.Equal(ln2.(ListNode).Node)
-// }
-
-// func (ln ListNode) LessThan(ln2 Noder) bool {
-// 	return ln.Node.LessThan(ln2.(ListNode).Node)
-// }
-
 type List interface{}
 
 func NewSort(lists interface{}) MSorter {
@@ -94,7 +80,7 @@ func (ms MSorter) ShiftMaxNode() Noder {
 	node := ms.nextNode(maxNode)
 
 	if node == nil {
-		panic("one of the list overflow, busy, I will enhance the code sometime")
+		panic("Only K < L is supported, K is TopK arg, L is the minimum length of list")
 	}
 	ms.MaxHeap = ms.MaxHeap.PushNode(node)
 	return maxNode
@@ -110,7 +96,7 @@ func (ms MSorter) nextNode(lastNode Noder) Noder {
 	}
 
 	if listIndex == -1 {
-		panic("max node home list no found")
+		panic("Only K < L is supported, K is TopK arg, L is the minimum length of list")
 	}
 
 	l := ms.ListBundle[listIndex]
