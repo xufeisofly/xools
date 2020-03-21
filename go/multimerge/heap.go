@@ -1,6 +1,8 @@
 package multimerge
 
-import "reflect"
+import (
+	"reflect"
+)
 
 type Heap []Noder
 
@@ -24,6 +26,13 @@ func (h Heap) shouldSwapWithChild(pNode Noder) bool {
 func (h Heap) biggerChildNode(pNode Noder) Noder {
 	node1 := h.leftChildNode(pNode)
 	node2 := h.rightChildNode(pNode)
+	if node1 == nil {
+		return node2
+	}
+	if node2 == nil {
+		return node1
+	}
+
 	if node1.LessThan(node2) {
 		return node2
 	}
@@ -117,5 +126,22 @@ func (h Heap) MakeMaxHeap() Heap {
 			h.flowUp(upNode)
 		}
 	}
+	return h
+}
+
+func (h Heap) LastNode() Noder {
+	return h[len(h)-1]
+}
+
+func (h Heap) deleteRootNode() Heap {
+	h.swap(h.RootNode(), h.LastNode())
+	h = h[0 : len(h)-1]
+	h.flowDown(h.RootNode())
+	return h
+}
+
+func (h Heap) PushNode(node Noder) Heap {
+	h = append(h, node)
+	h.MakeMaxHeap()
 	return h
 }

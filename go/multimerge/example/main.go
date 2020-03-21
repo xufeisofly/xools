@@ -18,16 +18,33 @@ func (i Item) LessThan(i2 multimerge.Noder) bool {
 }
 
 func main() {
-	l := []Item{
-		{Value: 9},
-		{Value: 7},
-		{Value: 13},
-		{Value: 15},
+	l1 := []Item{
+		{Value: 18},
+		{Value: 17},
+		{Value: 14},
+		{Value: 12},
 		{Value: 11},
 	}
 
-	h := multimerge.NewHeap(l)
-	fmt.Println(h)
-	hmax := h.MakeMaxHeap()
-	fmt.Println(hmax)
+	l2 := []Item{
+		{Value: 19},
+		{Value: 16},
+		{Value: 15},
+		{Value: 13},
+		{Value: 10},
+	}
+
+	l3 := []Item{
+		{Value: 17},
+		{Value: 15},
+		{Value: 12},
+		{Value: 11},
+		{Value: 9},
+	}
+
+	lb := [][]Item{l1, l2, l3}
+
+	ms := multimerge.NewSort(lb)
+	nodes := ms.TopK(5)
+	fmt.Println(nodes)
 }
