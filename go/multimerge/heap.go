@@ -17,9 +17,9 @@ func (h Heap) rootNodeIndex() int {
 func (h Heap) lastParentNodeIndex() int {
 	length := len(h)
 	if isEven(len(h)) {
-		return length/2 - 1
+		return length>>1 - 1
 	}
-	return (length-1)/2 - 1
+	return (length-1)>>1 - 1
 }
 
 func (h Heap) lastNodeIndex() int {
@@ -120,14 +120,19 @@ func (h Heap) swapByIndex(index1, index2 int) {
 }
 
 func (h Heap) parentNodeWithIndex(idx int) (Noder, int) {
+	var index int
+
 	node := h[idx]
 	if idx == 0 {
 		return node, 0
 	}
+
 	if isEven(idx) {
-		return h[idx/2-1], idx/2 - 1
+		index = (idx >> 1) - 1
+		return h[index], index
 	}
-	return h[(idx+1)/2-1], (idx+1)/2 - 1
+	index = ((idx + 1) >> 1) - 1
+	return h[index], index
 }
 
 func (h Heap) MakeMaxHeap() Heap {
