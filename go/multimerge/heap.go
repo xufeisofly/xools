@@ -76,13 +76,24 @@ func NewHeap(l List) Heap {
 	return ret
 }
 
-func (h Heap) flowUpByIndex(index int) {
+func (h Heap) flowUpWithAdjust(index int) {
 	pNode, pIdx := h.parentNodeWithIndex(index)
 	cNode, cIdx := h.biggerChildNodeWithIndex(pIdx)
 
 	if pNode.LessThan(cNode) {
 		h.swapByIndex(pIdx, cIdx)
 		h.flowDownByIndex(cIdx)
+		h.flowUpWithAdjust(pIdx)
+	}
+}
+
+// 不带微调的上浮
+func (h Heap) flowUpByIndex(index int) {
+	pNode, pIdx := h.parentNodeWithIndex(index)
+	cNode, cIdx := h.biggerChildNodeWithIndex(pIdx)
+
+	if pNode.LessThan(cNode) {
+		h.swapByIndex(pIdx, cIdx)
 		h.flowUpByIndex(pIdx)
 	}
 }
@@ -100,16 +111,6 @@ func (h Heap) flowDownByIndex(index int) {
 
 func (h Heap) hasChild(i int) bool {
 	return i <= h.lastParentNodeIndex()
-}
-
-// TODO 这个 for 循环太傻逼了
-func (h Heap) index(n Noder) int {
-	for i, node := range h {
-		if node.Equal(n) {
-			return i
-		}
-	}
-	panic("cannot find index")
 }
 
 func (h Heap) swapByIndex(index1, index2 int) {
@@ -133,7 +134,7 @@ func (h Heap) MakeMaxHeap() Heap {
 	for i := h.lastParentNodeIndex(); i >= 0; i-- {
 		if h.shouldSwapWithChild(i) {
 			_, upIdx := h.biggerChildNodeWithIndex(i)
-			h.flowUpByIndex(upIdx)
+			h.flowUpWithAdjust(upIdx)
 		}
 	}
 	return h
@@ -152,6 +153,7 @@ func (h Heap) deleteRootNode() Heap {
 
 func (h Heap) PushNode(node Noder) Heap {
 	h = append(h, node)
-	h.MakeMaxHeap()
+	// flow up 就行了，不要用 make
+	h.flowUpByIndex(h.lastNodeIndex())
 	return h
 }

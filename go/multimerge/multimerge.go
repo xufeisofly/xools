@@ -5,6 +5,7 @@ import (
 )
 
 type MSorter struct {
+	ListIn     []List
 	ListBundle [][]Noder
 	ListPtr    []int
 	MaxHeap    Heap
@@ -22,8 +23,9 @@ func NewSort(lists interface{}) MSorter {
 	if s.Kind() != reflect.Slice {
 		panic("NewSort is given a non-slice type")
 	}
-	lb := make([][]Noder, s.Len())
+	// lb := make([][]Noder, s.Len())
 	lptr := make([]int, s.Len())
+	lin := make([]List, s.Len())
 
 	for i := 0; i < s.Len(); i++ {
 		listValue := s.Index(i)
@@ -31,20 +33,23 @@ func NewSort(lists interface{}) MSorter {
 			panic("NewSort slice element is a non-slice type")
 		}
 
-		l := make([]Noder, listValue.Len())
+		// l := make([]Noder, listValue.Len())
 
-		for j := 0; j < listValue.Len(); j++ {
-			l[j] = listValue.Index(j).Interface().(Noder)
-		}
-		lb[i] = l
+		// for j := 0; j < listValue.Len(); j++ {
+		// 	l[j] = listValue.Index(j).Interface().(Noder)
+		// }
+
+		lin[i] = s.Index(i).Interface().(List)
+		// lb[i] = l
 		lptr[i] = 0
 	}
 
 	ret := MSorter{
-		ListBundle: lb,
-		ListPtr:    lptr,
+		ListIn: lin,
+		// ListBundle: lb,
+		ListPtr: lptr,
 	}
-	ret.initMaxHeap()
+	// ret.initMaxHeap()
 	return ret
 }
 
@@ -109,6 +114,31 @@ func (ms MSorter) nextNode(lastNode Noder) Noder {
 }
 
 func (ms MSorter) TopK(k int) []Noder {
+	// 我只能说这里是最最最拖慢速度的
+	lb := make([][]Noder, len(ms.ListIn))
+	for j, list := range ms.ListIn {
+		lv := reflect.ValueOf(list)
+		if lv.Kind() != reflect.Slice {
+			panic("NewSort slice element is a non-slice type")
+		}
+
+		var listLength int
+		// 如果 L > N*K，那么只需要在 N*K 的 长度里取值就行了
+		if lv.Len() > k*len(ms.ListIn) {
+			listLength = k * len(ms.ListIn)
+		} else {
+			listLength = lv.Len()
+		}
+		l := make([]Noder, listLength)
+
+		for ii := 0; ii < listLength; ii++ {
+			l[ii] = lv.Index(ii).Interface().(Noder)
+		}
+		lb[j] = l
+	}
+	ms.ListBundle = lb
+	ms.initMaxHeap()
+
 	ret := make([]Noder, k)
 	for i := 0; i < k; i++ {
 		ret[i] = ms.ShiftMaxNode()
