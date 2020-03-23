@@ -91,6 +91,7 @@ func (h Heap) hasChild(node Noder) bool {
 	return h.index(node) <= h.index(h.LastParentNode())
 }
 
+// TODO 这个 for 循环太傻逼了
 func (h Heap) index(n Noder) int {
 	for i, node := range h {
 		if node.Equal(n) {
@@ -100,6 +101,7 @@ func (h Heap) index(n Noder) int {
 	panic("cannot find index")
 }
 
+// TODO swap 永远是 parent 和 child， index 关系密切，不用去找 index
 func (h Heap) swap(node1, node2 Noder) {
 	idx1 := h.index(node1)
 	idx2 := h.index(node2)
