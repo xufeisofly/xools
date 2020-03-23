@@ -2,6 +2,7 @@ package multimerge
 
 import (
 	"reflect"
+	"sync"
 )
 
 type MSorter struct {
@@ -27,23 +28,22 @@ func NewSort(lists interface{}) MSorter {
 	lptr := make([]int, s.Len())
 	lin := make([]List, s.Len())
 
+	wg := sync.WaitGroup{}
 	for i := 0; i < s.Len(); i++ {
-		listValue := s.Index(i)
-		if listValue.Kind() != reflect.Slice {
-			panic("NewSort slice element is a non-slice type")
-		}
+		wg.Add(1)
+		go func(i int, s reflect.Value) {
+			listValue := s.Index(i)
+			if listValue.Kind() != reflect.Slice {
+				panic("NewSort slice element is a non-slice type")
+			}
 
-		// l := make([]Noder, listValue.Len())
-
-		// for j := 0; j < listValue.Len(); j++ {
-		// 	l[j] = listValue.Index(j).Interface().(Noder)
-		// }
-
-		lin[i] = s.Index(i).Interface().(List)
-		// lb[i] = l
-		lptr[i] = 0
+			lin[i] = s.Index(i).Interface().(List)
+			lptr[i] = 0
+			wg.Done()
+		}(i, s)
 	}
 
+	wg.Wait()
 	ret := MSorter{
 		ListIn: lin,
 		// ListBundle: lb,
@@ -116,26 +116,34 @@ func (ms MSorter) nextNode(lastNode Noder) Noder {
 func (ms MSorter) TopK(k int) []Noder {
 	// 我只能说这里是最最最拖慢速度的
 	lb := make([][]Noder, len(ms.ListIn))
+	wg := sync.WaitGroup{}
 	for j, list := range ms.ListIn {
-		lv := reflect.ValueOf(list)
-		if lv.Kind() != reflect.Slice {
-			panic("NewSort slice element is a non-slice type")
-		}
+		wg.Add(1)
+		go func(j int, list List) {
+			lv := reflect.ValueOf(list)
+			if lv.Kind() != reflect.Slice {
+				panic("NewSort slice element is a non-slice type")
+			}
 
-		var listLength int
-		// 如果 L > N*K，那么只需要在 N*K 的 长度里取值就行了
-		if lv.Len() > k*len(ms.ListIn) {
-			listLength = k * len(ms.ListIn)
-		} else {
-			listLength = lv.Len()
-		}
-		l := make([]Noder, listLength)
+			var listLength int
+			// 如果 L > N*K，那么只需要在 N*K 的 长度里取值就行了
+			if lv.Len() > k*len(ms.ListIn) {
+				listLength = k * len(ms.ListIn)
+			} else {
+				listLength = lv.Len()
+			}
+			l := make([]Noder, listLength)
 
-		for ii := 0; ii < listLength; ii++ {
-			l[ii] = lv.Index(ii).Interface().(Noder)
-		}
-		lb[j] = l
+			for ii := 0; ii < listLength; ii++ {
+				l[ii] = lv.Index(ii).Interface().(Noder)
+			}
+
+			lb[j] = l
+			wg.Done()
+		}(j, list)
 	}
+	wg.Wait()
+
 	ms.ListBundle = lb
 	ms.initMaxHeap()
 
