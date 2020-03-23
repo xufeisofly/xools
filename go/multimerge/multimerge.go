@@ -45,11 +45,9 @@ func NewSort(lists interface{}) MSorter {
 
 	wg.Wait()
 	ret := MSorter{
-		ListIn: lin,
-		// ListBundle: lb,
+		ListIn:  lin,
 		ListPtr: lptr,
 	}
-	// ret.initMaxHeap()
 	return ret
 }
 

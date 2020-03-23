@@ -89,8 +89,8 @@ func (a byItemIndex) Len() int           { return len(a) }
 func (a byItemIndex) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a byItemIndex) Less(i, j int) bool { return a[i].Heat > a[j].Heat }
 
-const L = 100000
-const numList = 50
+const L = 10000
+const numList = 100
 const K = 100
 
 func getLists(L int) [][]Item {
