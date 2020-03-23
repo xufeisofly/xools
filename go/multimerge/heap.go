@@ -10,45 +10,57 @@ func (h Heap) RootNode() Noder {
 	return h[0]
 }
 
-func (h Heap) LastParentNode() Noder {
-	length := len(h)
-	if isEven(len(h)) {
-		return h[length/2-1]
-	}
-	return h[(length-1)/2-1]
+func (h Heap) rootNodeIndex() int {
+	return 0
 }
 
-func (h Heap) shouldSwapWithChild(pNode Noder) bool {
-	biggerChildNode := h.biggerChildNode(pNode)
+func (h Heap) lastParentNodeIndex() int {
+	length := len(h)
+	if isEven(len(h)) {
+		return length/2 - 1
+	}
+	return (length-1)/2 - 1
+}
+
+func (h Heap) lastNodeIndex() int {
+	return len(h) - 1
+}
+
+func (h Heap) shouldSwapWithChild(i int) bool {
+	pNode := h[i]
+	biggerChildNode, _ := h.biggerChildNodeWithIndex(i)
 	return pNode.LessThan(biggerChildNode)
 }
 
-func (h Heap) biggerChildNode(pNode Noder) Noder {
-	node1 := h.leftChildNode(pNode)
-	node2 := h.rightChildNode(pNode)
+func (h Heap) biggerChildNodeWithIndex(pIdx int) (Noder, int) {
+	node1, idx1 := h.leftChildNodeWithIndex(pIdx)
+	node2, idx2 := h.rightChildNodeWithIndex(pIdx)
+
 	if node1 == nil {
-		return node2
+		return node2, idx2
 	}
 	if node2 == nil {
-		return node1
+		return node1, idx1
 	}
 
 	if node1.LessThan(node2) {
-		return node2
+		return node2, idx2
 	}
-	return node1
+	return node1, idx1
 }
 
-func (h Heap) leftChildNode(pNode Noder) Noder {
-	return h[2*h.index(pNode)+1]
+func (h Heap) leftChildNodeWithIndex(i int) (Noder, int) {
+	index := 2*i + 1
+	return h[index], index
 }
 
-func (h Heap) rightChildNode(pNode Noder) Noder {
-	idx := h.index(pNode)
-	if isEven(len(h)) && idx == h.index(h.LastParentNode()) {
-		return nil
+func (h Heap) rightChildNodeWithIndex(i int) (Noder, int) {
+	if isEven(len(h)) && i == h.lastParentNodeIndex() {
+		return nil, 0
 	}
-	return h[2*idx+2]
+
+	index := 2*i + 2
+	return h[index], index
 }
 
 func NewHeap(l List) Heap {
@@ -64,31 +76,30 @@ func NewHeap(l List) Heap {
 	return ret
 }
 
-func (h Heap) flowUp(node Noder) {
-	pNode := h.parentNode(node)
-	cNode := h.biggerChildNode(pNode)
-	pIdx := h.index(pNode)
-	cIdx := h.index(cNode)
+func (h Heap) flowUpByIndex(index int) {
+	pNode, pIdx := h.parentNodeWithIndex(index)
+	cNode, cIdx := h.biggerChildNodeWithIndex(pIdx)
+
 	if pNode.LessThan(cNode) {
-		h.swap(pNode, cNode)
-		h.flowDown(h[cIdx])
-		h.flowUp(h[pIdx])
+		h.swapByIndex(pIdx, cIdx)
+		h.flowDownByIndex(cIdx)
+		h.flowUpByIndex(pIdx)
 	}
 }
 
-func (h Heap) flowDown(node Noder) {
-	if h.hasChild(node) {
-		cNode := h.biggerChildNode(node)
-		cIdx := h.index(cNode)
+func (h Heap) flowDownByIndex(index int) {
+	node := h[index]
+	if h.hasChild(index) {
+		cNode, cIdx := h.biggerChildNodeWithIndex(index)
 		if node.LessThan(cNode) {
-			h.swap(node, cNode)
-			h.flowDown(h[cIdx])
+			h.swapByIndex(index, cIdx)
+			h.flowDownByIndex(cIdx)
 		}
 	}
 }
 
-func (h Heap) hasChild(node Noder) bool {
-	return h.index(node) <= h.index(h.LastParentNode())
+func (h Heap) hasChild(i int) bool {
+	return i <= h.lastParentNodeIndex()
 }
 
 // TODO 这个 for 循环太傻逼了
@@ -101,31 +112,28 @@ func (h Heap) index(n Noder) int {
 	panic("cannot find index")
 }
 
-// TODO swap 永远是 parent 和 child， index 关系密切，不用去找 index
-func (h Heap) swap(node1, node2 Noder) {
-	idx1 := h.index(node1)
-	idx2 := h.index(node2)
-	h[idx1] = node2
-	h[idx2] = node1
+func (h Heap) swapByIndex(index1, index2 int) {
+	tmp := h[index1]
+	h[index1] = h[index2]
+	h[index2] = tmp
 }
 
-func (h Heap) parentNode(node Noder) Noder {
-	idx := h.index(node)
+func (h Heap) parentNodeWithIndex(idx int) (Noder, int) {
+	node := h[idx]
 	if idx == 0 {
-		return node
+		return node, 0
 	}
 	if isEven(idx) {
-		return h[idx/2-1]
+		return h[idx/2-1], idx/2 - 1
 	}
-	return h[(idx+1)/2-1]
+	return h[(idx+1)/2-1], (idx+1)/2 - 1
 }
 
 func (h Heap) MakeMaxHeap() Heap {
-	for i := h.index(h.LastParentNode()); i >= 0; i-- {
-		curPNode := h[i]
-		if h.shouldSwapWithChild(curPNode) {
-			upNode := h.biggerChildNode(curPNode)
-			h.flowUp(upNode)
+	for i := h.lastParentNodeIndex(); i >= 0; i-- {
+		if h.shouldSwapWithChild(i) {
+			_, upIdx := h.biggerChildNodeWithIndex(i)
+			h.flowUpByIndex(upIdx)
 		}
 	}
 	return h
@@ -136,9 +144,9 @@ func (h Heap) LastNode() Noder {
 }
 
 func (h Heap) deleteRootNode() Heap {
-	h.swap(h.RootNode(), h.LastNode())
+	h.swapByIndex(h.rootNodeIndex(), h.lastNodeIndex())
 	h = h[0 : len(h)-1]
-	h.flowDown(h.RootNode())
+	h.flowDownByIndex(h.rootNodeIndex())
 	return h
 }
 
