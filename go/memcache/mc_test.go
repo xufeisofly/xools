@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-
-	"git.in.zhihu.com/knowledge-market/education/pkg/util/tools/mc"
 )
 
 func init() {
